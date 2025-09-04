@@ -1,18 +1,21 @@
-    import React from 'react';
-    import { Switch, Route } from 'react-router-dom';
-    import HomePage from './pages/HomePage';
-    import LoginPage from './pages/LoginPage';
-    import CadastroPage from './pages/CadastroPage';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import HomePage from './pages/HomePage';
+import CadastroPage from './pages/CadastroPage';
+import RecuperarSenhaPage from './pages/RecuperarSenhaPage';
+import Dashboard from './pages/Dashboard';
 
-    function App() {
-      return (
-        <Switch>
-          <Route exact path="/" component={HomePage} />
-          <Route path="/login" component={LoginPage} />
-          <Route path="/cadastro" component={CadastroPage} />
-        </Switch>
-      );
-    }
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/cadastro" element={<CadastroPage />} />
+        <Route path="/recuperar-senha" element={<RecuperarSenhaPage />} />
+        <Route path="/dashboard" element={<Dashboard />} /> {/**/}
+      </Routes>
+    </Router>
+  );
+}
 
-    export default App;
-    
+export default App;
