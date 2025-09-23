@@ -1,7 +1,9 @@
+// src/pages/RecuperarSenhaPage.js
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { recuperarSenha } from '../api';
-import '../App.css';
+import AuthFormContainer from '../components/AuthFormContainer'; // Importa o novo componente
 
 const RecuperarSenhaPage = () => {
   const [email, setEmail] = useState('');
@@ -28,8 +30,7 @@ const RecuperarSenhaPage = () => {
   };
 
   return (
-    <div className="container"> {/* Usa a classe container */}
-      <h1>Recuperar Senha</h1>
+    <AuthFormContainer title="Recuperar Senha">
       <p>Informe o e-mail cadastrado para receber o link de recuperação de senha.</p>
       <form onSubmit={handleRecuperarSenha}>
         <div className="form-group">
@@ -45,14 +46,14 @@ const RecuperarSenhaPage = () => {
         </div>
         <button type="submit">Enviar Link de Recuperação</button>
       </form>
-      
+
       {mensagem && <p className="success-message">{mensagem}</p>}
       {erro && <p className="error-message">{erro}</p>}
 
       <div className="button-group">
         <button onClick={() => navigate('/')} className="secondary-button">Voltar para o Login</button>
       </div>
-    </div>
+    </AuthFormContainer>
   );
 };
 

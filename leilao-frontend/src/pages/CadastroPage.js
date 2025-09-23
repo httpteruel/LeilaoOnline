@@ -1,7 +1,9 @@
+// src/pages/CadastroPage.js
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cadastrarPessoa } from '../api';
-import '../App.css';
+import AuthFormContainer from '../components/AuthFormContainer'; // Importa o novo componente
 
 const CadastroPage = () => {
   const [nome, setNome] = useState('');
@@ -26,8 +28,6 @@ const CadastroPage = () => {
       const response = await cadastrarPessoa({ nome, email, senha });
       console.log('Cadastro bem-sucedido:', response.data);
       setSucesso('Cadastro realizado com sucesso! Você já pode fazer login.');
-      // Opcionalmente, redirecionar após um tempo
-      // setTimeout(() => navigate('/'), 3000);
     } catch (error) {
       if (error.response && error.response.data) {
         setErro(error.response.data.message || 'Erro ao cadastrar. Tente novamente.');
@@ -39,8 +39,7 @@ const CadastroPage = () => {
   };
 
   return (
-    <div className="container"> {/* Usa a classe container */}
-      <h1>Cadastre-se</h1>
+    <AuthFormContainer title="Cadastre-se">
       <form onSubmit={handleCadastro}>
         <div className="form-group">
           <label htmlFor="nomeCadastro">Nome</label>
@@ -88,14 +87,14 @@ const CadastroPage = () => {
         </div>
         <button type="submit">Cadastrar</button>
       </form>
-      
+
       {erro && <p className="error-message">{erro}</p>}
       {sucesso && <p className="success-message">{sucesso}</p>}
 
       <div className="button-group">
         <button onClick={() => navigate('/')} className="secondary-button">Voltar para o Login</button>
       </div>
-    </div>
+    </AuthFormContainer>
   );
 };
 

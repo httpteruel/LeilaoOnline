@@ -1,7 +1,9 @@
+// src/pages/HomePage.js
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../api';
-import '../App.css';
+import AuthFormContainer from '../components/AuthFormContainer';
 
 const HomePage = () => {
   const [email, setEmail] = useState('');
@@ -16,11 +18,18 @@ const HomePage = () => {
     try {
       const response = await login(email, senha);
       const { jwt } = response.data;
-      
+
       localStorage.setItem('leilaoToken', jwt);
-      
+
       console.log('Login bem-sucedido. Token:', jwt);
-      navigate('/dashboard');
+
+      // Redirecionamento condicional baseado no e-mail
+      if (email === 'admin@leilao.com') {
+        navigate('/gerenciar-leiloes');
+      } else {
+        navigate('/dashboard');
+      }
+
     } catch (error) {
       if (error.response && error.response.data) {
         setErro(error.response.data.message || 'Erro ao fazer login. Verifique suas credenciais.');
@@ -32,9 +41,7 @@ const HomePage = () => {
   };
 
   return (
-    <div className="container">
-      <h1>Bem-vindo ao Leilão Online</h1>
-      
+    <AuthFormContainer title="Bem-vindo ao Leilão Online">
       <form onSubmit={handleLogin}>
         <div className="form-group">
           <label htmlFor="emailLogin">E-mail</label>
@@ -60,14 +67,14 @@ const HomePage = () => {
         </div>
         <button type="submit">Entrar</button>
       </form>
-      
+
       {erro && <p className="error-message">{erro}</p>}
-      
-      <div className="button-group"> {/*-*/}
+
+      <div className="button-group">
         <button onClick={() => navigate('/cadastro')} className="secondary-button">Não tem uma conta? Cadastre-se</button>
         <button onClick={() => navigate('/recuperar-senha')} className="secondary-button">Esqueceu a senha?</button>
       </div>
-    </div>
+    </AuthFormContainer>
   );
 };
 
