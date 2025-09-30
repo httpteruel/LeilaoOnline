@@ -33,4 +33,20 @@ export const criarLeilao = async (leilaoData) => {
       Authorization: `Bearer ${token}`
     }
   });
+
 };
+
+export const darLance = (lanceData) => {
+  // Note que 'lanceData' já é o objeto DTO (valor, pessoaId, leilaoId)
+  const token = localStorage.getItem('leilaoToken');
+  return api.post('/lances', lanceData, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
+export const buscarLeilaoPorId = (leilaoId) => {
+  return api.get(`/leiloes/${leilaoId}`);
+};
+

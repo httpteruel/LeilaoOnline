@@ -1,12 +1,13 @@
 package com.leilaoonline.leilao.service;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Optional;
+import java.math.BigDecimal;
+import java.util.Comparator;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.leilaoonline.leilao.dto.LanceCadastroDTO;
 import com.leilaoonline.leilao.model.Lance;
 import com.leilaoonline.leilao.model.Leilao;
 import com.leilaoonline.leilao.model.Pessoa;
@@ -19,51 +20,57 @@ public class LanceService {
 
     @Autowired
     private LanceRepository lanceRepository;
-    
+
     @Autowired
     private LeilaoRepository leilaoRepository;
 
     @Autowired
     private PessoaRepository pessoaRepository;
 
-    public Lance registrarLance(Long leilaoId, Long pessoaId, BigDecimal valor) {
-        Optional<Leilao> leilaoOpt = leilaoRepository.findById(leilaoId);
-        Optional<Pessoa> pessoaOpt = pessoaRepository.findById(pessoaId);
+    // CORREÇÃO: Método agora aceita LanceCadastroDTO
+    public Lance darLance(LanceCadastroDTO dto) {
+        // 1. Busca as entidades
+        Leilao leilao = leilaoRepository.findById(dto.getLeilaoId())
+                .orElseThrow(() -> new RuntimeException("Leilão não encontrado."));
 
-        if (leilaoOpt.isEmpty() || pessoaOpt.isEmpty()) {
-            throw new RuntimeException("Leilão ou Pessoa não encontrados.");
-        }
+        Pessoa pessoa = pessoaRepository.findById(dto.getPessoaId())
+                .orElseThrow(() -> new RuntimeException("Pessoa (ofertante) não encontrada."));
 
-        Leilao leilao = leilaoOpt.get();
-        Pessoa pessoa = pessoaOpt.get();
-        
-        if (leilao.getCriador().getId().equals(pessoaId)) {
-            throw new RuntimeException("O criador não pode dar lances no próprio leilão.");
-        }
-        
-        if (leilao.getDataFim().isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("Leilão já finalizado.");
+        // 2. Validações de Negócio
+
+        // 2.1. O criador não pode dar lance
+        if (leilao.getCriador().getId().equals(pessoa.getId())) {
+            throw new RuntimeException("O criador não pode dar lance no próprio leilão.");
         }
 
-        BigDecimal valorMinimo = leilao.getValorInicial();
-        
-        Optional<Lance> ultimoLance = leilao.getLances().stream()
-                .max((l1, l2) -> l1.getValor().compareTo(l2.getValor()));
+        // 2.2. O leilão deve estar ativo
+        LocalDateTime agora = LocalDateTime.now();
+        if (agora.isBefore(leilao.getDataInicio())) {
+            throw new RuntimeException("O leilão ainda não foi iniciado.");
+        }
+        if (agora.isAfter(leilao.getDataFim())) {
+            throw new RuntimeException("O leilão já foi encerrado.");
+        }
 
-        if (ultimoLance.isPresent()) {
-            valorMinimo = ultimoLance.get().getValor();
+        // 2.3. Valida o valor do lance
+        // Assumindo que a lista de lances em Leilao foi carregada (necessário
+        // @Transactional ou FetchType.EAGER)
+        BigDecimal maiorLanceAtual = leilao.getLances().stream()
+                .max(Comparator.comparing(Lance::getValor))
+                .map(Lance::getValor)
+                .orElse(leilao.getValorInicial()); // Se não houver lances, usa o valor inicial
+
+        if (dto.getValor().compareTo(maiorLanceAtual) <= 0) {
+            throw new RuntimeException("O lance deve ser maior que o valor atual: R$ " + maiorLanceAtual);
         }
-        
-        if (valor.compareTo(valorMinimo) <= 0) {
-            throw new RuntimeException("O valor do lance deve ser maior que o último lance ou o valor inicial.");
-        }
-        
+
+        // 3. Cria e Salva o Lance
         Lance novoLance = new Lance();
-        novoLance.setLeilao(leilao);
+        novoLance.setValor(dto.getValor());
+        novoLance.setDataLance(agora);
         novoLance.setPessoa(pessoa);
-        novoLance.setValor(valor);
-        novoLance.setDataLance(LocalDateTime.now());
-        
+        novoLance.setLeilao(leilao);
+
         return lanceRepository.save(novoLance);
     }
 }

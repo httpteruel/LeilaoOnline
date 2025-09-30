@@ -1,80 +1,87 @@
 // src/pages/HomePage.js
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login } from '../api';
-import AuthFormContainer from '../components/AuthFormContainer';
+import { listarLeiloes } from '../api';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
+import '../App.css';
+// Importa uma imagem placeholder ou crie uma no seu projeto
+import placeholderImage from '../assets/placeholder-leilao.jpg'; // Crie esta imagem ou use uma URL externa
 
 const HomePage = () => {
-  const [email, setEmail] = useState('');
-  const [senha, setSenha] = useState('');
+  const [leiloes, setLeiloes] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState('');
   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setErro('');
-
+  const fetchLeiloes = async () => {
     try {
-      const response = await login(email, senha);
-      const { jwt } = response.data;
-
-      localStorage.setItem('leilaoToken', jwt);
-
-      console.log('Login bem-sucedido. Token:', jwt);
-
-      // Redirecionamento condicional baseado no e-mail
-      if (email === 'admin@leilao.com') {
-        navigate('/gerenciar-leiloes');
-      } else {
-        navigate('/dashboard');
-      }
-
+      const response = await listarLeiloes();
+      setLeiloes(response.data);
     } catch (error) {
-      if (error.response && error.response.data) {
-        setErro(error.response.data.message || 'Erro ao fazer login. Verifique suas credenciais.');
-      } else {
-        setErro('Erro de rede ou servidor. Tente novamente mais tarde.');
-      }
-      console.error('Erro de login:', error);
+      setErro('Erro ao carregar a lista de leilões. Verifique se o backend está rodando.');
+      console.error('Erro ao buscar leilões:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  return (
-    <AuthFormContainer title="Bem-vindo ao Leilão Online">
-      <form onSubmit={handleLogin}>
-        <div className="form-group">
-          <label htmlFor="emailLogin">E-mail</label>
-          <input
-            id="emailLogin"
-            type="email"
-            placeholder="Seu e-mail"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="senhaLogin">Senha</label>
-          <input
-            id="senhaLogin"
-            type="password"
-            placeholder="Sua senha"
-            value={senha}
-            onChange={(e) => setSenha(e.target.value)}
-            required
-          />
-        </div>
-        <button type="submit">Entrar</button>
-      </form>
+  useEffect(() => {
+    fetchLeiloes();
+  }, []);
 
-      {erro && <p className="error-message">{erro}</p>}
+  const handleVerDetalhes = (id) => {
+    navigate(`/leiloes/${id}`);
+  };
 
-      <div className="button-group">
-        <button onClick={() => navigate('/cadastro')} className="secondary-button">Não tem uma conta? Cadastre-se</button>
-        <button onClick={() => navigate('/recuperar-senha')} className="secondary-button">Esqueceu a senha?</button>
+  if (loading) {
+    return (
+      <div className="container" style={{ textAlign: 'center' }}>
+        <p>Carregando leilões abertos...</p>
       </div>
-    </AuthFormContainer>
+    );
+  }
+
+  return (
+    <div>
+      <Header />
+      <div className="container">
+        <h1 className="section-title">Leilões Ativos</h1>
+        {erro && <p className="error-message" style={{ textAlign: 'center' }}>{erro}</p>}
+
+        <div className="leiloes-list-grid">
+          {leiloes.length === 0 ? (
+            <p style={{ textAlign: 'center', gridColumn: '1 / -1' }}>
+              Nenhum leilão ativo encontrado. Adicione um para começar!
+            </p>
+          ) : (
+            leiloes.map((leilao) => (
+              <div key={leilao.id} className="leilao-card" onClick={() => handleVerDetalhes(leilao.id)}>
+                <img
+                  src={leilao.imageUrl || placeholderImage} // Usa a imagem do leilão ou o placeholder
+                  alt={leilao.titulo}
+                  onError={(e) => { e.target.onerror = null; e.target.src = placeholderImage; }} // Fallback se a URL da imagem falhar
+                />
+                <div className="card-content">
+                  <h2>{leilao.titulo}</h2>
+                  <p>{leilao.descricao.substring(0, 80)}...</p>
+                  <div> {/* Para agrupar valor e data no final */}
+                    <p className="valor-inicial">
+                      Lance Inicial: R$ **{leilao.valorInicial ? leilao.valorInicial.toFixed(2) : '0.00'}**
+                    </p>
+                    <p className="data-fim">
+                      Termina em: **{new Date(leilao.dataFim).toLocaleDateString()}**
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+      <Footer />
+    </div>
   );
 };
 

@@ -16,8 +16,8 @@ const GerenciarLeiloes = () => {
     const fetchLeiloes = async () => {
         try {
             const response = await listarLeiloes();
-            // Apenas lista os leilões do usuário logado (opcional, pode listar todos)
-            const leiloesDoUsuario = response.data.filter(leilao => leilao.emailCriador === 'admin@leilao.com');
+            // Lógica para filtrar leilões (ajuste se necessário)
+            const leiloesDoUsuario = response.data.filter(leilao => leilao.criador.email === 'admin@leilao.com');
             setLeiloes(leiloesDoUsuario);
         } catch (error) {
             setErro('Erro ao carregar a lista de leilões.');
@@ -46,11 +46,22 @@ const GerenciarLeiloes = () => {
 
     const handleAdicionarNovoLeilao = async (novoLeilaoData) => {
         try {
-            await criarLeilao(novoLeilaoData);
+            // *** PONTO CRÍTICO: USE IDs QUE EXISTEM NO SEU BANCO DE DADOS ***
+            const leilaoParaEnviar = {
+                ...novoLeilaoData,
+                // Altere estes IDs (1 e 1) se eles não existirem no seu DB
+                criadorId: 1,
+                categoriaId: 1,
+            };
+
+            await criarLeilao(leilaoParaEnviar);
+
             alert('Leilão adicionado com sucesso!');
-            fetchLeiloes(); // Recarrega a lista de leilões
+            fetchLeiloes(); // Recarrega a lista
+            handleFecharAdicionarModal(); // Fecha o modal após sucesso
         } catch (error) {
-            alert('Erro ao adicionar o leilão.');
+            // Este alerta foi atualizado para indicar a provável causa do 400
+            alert('Erro ao adicionar o leilão. Motivo provável: Criador ou Categoria não encontrados (verifique os IDs no DB).');
             console.error('Erro ao adicionar novo leilão:', error);
         }
     };
@@ -73,6 +84,16 @@ const GerenciarLeiloes = () => {
 
                 <div style={{ textAlign: 'center', margin: '2rem 0' }}>
                     <button className="add-leilao-btn" onClick={handleAbrirAdicionarModal}>Adicionar Novo Leilão</button>
+                </div>
+
+                {/* Adicione a listagem de leilões aqui */}
+                <div className="leiloes-list">
+                    {leiloes.length === 0 ? (
+                        <p style={{ textAlign: 'center' }}>Nenhum leilão seu encontrado.</p>
+                    ) : (
+                        // Mapear e exibir os leilões
+                        <p>Leilões do usuário serão listados aqui.</p>
+                    )}
                 </div>
             </div>
 

@@ -50,6 +50,8 @@ public class Leilao {
     @OneToMany(mappedBy = "leilao", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Lance> lances;
 
+    private String imageUrl;
+
     // Construtor, Getters e Setters
     public Leilao() {}
 
@@ -123,5 +125,13 @@ public class Leilao {
 
     public void setLances(List<Lance> lances) {
         this.lances = lances;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 }

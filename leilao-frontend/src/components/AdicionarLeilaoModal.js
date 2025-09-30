@@ -1,76 +1,79 @@
 import React, { useState } from 'react';
+import '../App.css'; // Importe seu arquivo CSS para estilização
 
 const AdicionarLeilaoModal = ({ onClose, onAdicionarLeilao }) => {
     const [titulo, setTitulo] = useState('');
     const [descricao, setDescricao] = useState('');
+    const [imageUrl, setImageUrl] = useState(''); // Estado para a URL da Imagem
     const [valorInicial, setValorInicial] = useState('');
-    const [dataFechamento, setDataFechamento] = useState('');
+    const [dataFim, setDataFim] = useState('');
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (!titulo || !descricao || !valorInicial || !dataFechamento) {
-            alert('Por favor, preencha todos os campos.');
-            return;
-        }
 
-        const novoLeilao = {
+        // Formata a dataFim para o backend (ISO String)
+        const dataFimFormatada = dataFim
+            ? new Date(dataFim).toISOString()
+            : null;
+
+        const novoLeilaoData = {
             titulo,
             descricao,
+            imageUrl, // Envia a URL da Imagem
             valorInicial: parseFloat(valorInicial),
-            dataFechamento: new Date(dataFechamento).toISOString(),
+            dataFim: dataFimFormatada,
         };
 
-        onAdicionarLeilao(novoLeilao);
-        onClose(); // Fecha o modal após o envio
+        // Chama a função passada pelo componente pai
+        onAdicionarLeilao(novoLeilaoData);
     };
 
     return (
-        <div className="modal-backdrop">
+        <div className="modal-overlay">
             <div className="modal-content">
-                <button className="modal-close-btn" onClick={onClose}>&times;</button>
                 <h2>Adicionar Novo Leilão</h2>
                 <form onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label>Título</label>
-                        <input
-                            type="text"
-                            value={titulo}
-                            onChange={(e) => setTitulo(e.target.value)}
-                            placeholder="Ex: Obra de Arte Rara"
-                            required
-                        />
+                    <input
+                        type="text"
+                        placeholder="Título"
+                        value={titulo}
+                        onChange={(e) => setTitulo(e.target.value)}
+                        required
+                    />
+                    <textarea
+                        placeholder="Descrição"
+                        value={descricao}
+                        onChange={(e) => setDescricao(e.target.value)}
+                        required
+                    />
+                    <input
+                        type="url"
+                        placeholder="URL da Imagem (Ex: https://site.com/foto.jpg)"
+                        value={imageUrl}
+                        onChange={(e) => setImageUrl(e.target.value)}
+                    />
+                    <input
+                        type="number"
+                        placeholder="Valor Inicial (R$)"
+                        value={valorInicial}
+                        onChange={(e) => setValorInicial(e.target.value)}
+                        required
+                        min="0.01"
+                        step="0.01"
+                    />
+                    <label>Data e Hora de Fim:</label>
+                    <input
+                        type="datetime-local"
+                        value={dataFim}
+                        onChange={(e) => setDataFim(e.target.value)}
+                        required
+                    />
+
+                    <div className="modal-actions">
+                        <button type="submit" className="btn-primary">Adicionar</button>
+                        {/* Botão para fechar o modal */}
+                        <button type="button" className="btn-secondary" onClick={onClose}>Cancelar</button>
                     </div>
-                    <div className="form-group">
-                        <label>Descrição</label>
-                        <textarea
-                            value={descricao}
-                            onChange={(e) => setDescricao(e.target.value)}
-                            placeholder="Detalhes sobre o item do leilão"
-                            rows="4"
-                            required
-                        ></textarea>
-                    </div>
-                    <div className="form-group">
-                        <label>Valor Inicial (R$)</label>
-                        <input
-                            type="number"
-                            value={valorInicial}
-                            onChange={(e) => setValorInicial(e.target.value)}
-                            placeholder="Ex: 5000.00"
-                            step="0.01"
-                            required
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label>Data de Fechamento</label>
-                        <input
-                            type="datetime-local"
-                            value={dataFechamento}
-                            onChange={(e) => setDataFechamento(e.target.value)}
-                            required
-                        />
-                    </div>
-                    <button type="submit">Adicionar Leilão</button>
                 </form>
             </div>
         </div>

@@ -1,20 +1,19 @@
 package com.leilaoonline.leilao.controller;
 
-import java.math.BigDecimal;
-import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.leilaoonline.leilao.dto.LanceCadastroDTO; // Importa o DTO
 import com.leilaoonline.leilao.model.Lance;
 import com.leilaoonline.leilao.service.LanceService;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/lances")
@@ -23,17 +22,17 @@ public class LanceController {
 
     @Autowired
     private LanceService lanceService;
-    
-    @PostMapping("/{leilaoId}")
-    public ResponseEntity<?> darLance(@PathVariable Long leilaoId, @RequestBody Map<String, Object> request) {
+
+    @PostMapping
+    // CORREÇÃO: Recebe apenas o DTO no corpo (@RequestBody)
+    public ResponseEntity<Lance> darLance(@RequestBody @Valid LanceCadastroDTO dto) {
         try {
-            Long pessoaId = Long.valueOf(request.get("pessoaId").toString());
-            BigDecimal valor = new BigDecimal(request.get("valor").toString());
-            
-            Lance novoLance = lanceService.registrarLance(leilaoId, pessoaId, valor);
+            // Chama o método atualizado do Service
+            Lance novoLance = lanceService.darLance(dto);
             return new ResponseEntity<>(novoLance, HttpStatus.CREATED);
         } catch (RuntimeException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+            // Retorna a mensagem de erro do Service (ex: Leilão encerrado)
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
         }
     }
 }
